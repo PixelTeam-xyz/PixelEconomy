@@ -1,0 +1,5 @@
+MoneyIcon = "💴"
+WorkDelay = 30
+DatabasePath = "economy.db"
+WorkEarningsMin = 50
+WorkEarningsMax = 200
