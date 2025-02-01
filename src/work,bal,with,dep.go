@@ -3,12 +3,23 @@ package main
 import (
 	"fmt"
 	dsc "github.com/bwmarrin/discordgo"
+	"strconv"
 	"time"
 	. "utils"
 )
 
 func balCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 	var usr string
+	incorrect := func() {
+		sendErr(msg.ChannelID, "Niepoprawny format komendy "+cnf.CommandPrefix+"bal!")
+		sendTip(msg.ChannelID, "Użycie:", &dsc.MessageEmbedField{
+			Name:  "1. Sprawdzanie swojego stanu konta",
+			Value: fmt.Sprintf("%sbal", cnf.CommandPrefix),
+		}, &dsc.MessageEmbedField{
+			Name:  "2. Sprawdzanie stanu konta innego użytkownika",
+			Value: fmt.Sprintf("%sbal @user", cnf.CommandPrefix),
+		})
+	}
 	switch len(cmd) {
 	case 1:
 		usr = userID
@@ -16,40 +27,33 @@ func balCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 		if HasPrefix(cmd[1], "<@") && HasSuffix(cmd[1], ">") {
 			usr = TrimPrefix(TrimSuffix(cmd[1], ">"), "<@")
 		} else {
-			sendErrf(msg.ChannelID, "Niepoprawny format komendy bal!")
-			sendTip(msg.ChannelID, "Użycie:", &dsc.MessageEmbedField{
-				Name:  "1. Sprawdzanie swojego stanu konta",
-				Value: fmt.Sprintf("%sbal", cnf.CommandPrefix),
-			}, &dsc.MessageEmbedField{
-				Name:  "2. Sprawdzanie stanu konta innego użytkownika",
-				Value: fmt.Sprintf("%sbal @user", cnf.CommandPrefix),
-			})
+			incorrect()
+			return
 		}
+	default:
+		incorrect()
+		return
 	}
 	sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
-		Title: fmt.Sprintf("Stan konta @%s", func() string {
-			x, err := bot.GuildMember(msg.GuildID, usr)
-			Except(err)
-			if err == nil {
-				return x.User.Username
-			} else {
-				return usr
-			}
-		}()),
+		Author: &dsc.MessageEmbedAuthor{
+			Name:    fmt.Sprintf("%s    - Stan konta", msg.Author.Username),
+			IconURL: msg.Author.AvatarURL("512"),
+		},
+		//Title: fmt.Sprintf("Stan konta"),
 		Color: cnf.MainEmbedColor,
 		Fields: []*dsc.MessageEmbedField{
 			{
-				Name:   "👛 Portfel",
+				Name:   "👛 Portfel:  ",
 				Value:  fmt.Sprintf("%d %s", getBal(usr), cnf.MoneyIcon),
 				Inline: true,
 			},
 			{
-				Name:   "🏦 Bank",
+				Name:   "🏦 Bank:  ",
 				Value:  fmt.Sprintf("%d %s", getBank(usr), cnf.MoneyIcon),
 				Inline: true,
 			},
 			{
-				Name:   "💰 Łącznie",
+				Name:   "💰 Łącznie:  ",
 				Value:  fmt.Sprintf("%d %s", getBal(usr)+getBank(usr), cnf.MoneyIcon),
 				Inline: true,
 			},
@@ -73,6 +77,70 @@ func workCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 		Description: fmt.Sprintf("Zarobiłeś %d%s!", income, cnf.MoneyIcon),
 		Color:       cnf.MainEmbedColor,
 	})
-	//balCommand(msg, userID, []string{"bal"})
 }
 
+func depCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
+	var toDep int64
+	switch len(cmd) {
+	case 1:
+		toDep = getBal(userID)
+	case 2:
+		if x, err := strconv.Atoi(cmd[1]); err != nil {
+			sendErrf(msg.ChannelID, "Niepoprawna kwota! Podaj poprawną liczbe po poleceniu %sdep", cnf.CommandPrefix)
+			return
+		} else {
+			toDep = int64(x)
+		}
+	}
+
+	if toDep < 0 {
+		sendErr(msg.ChannelID, "Nie możesz wpłacić ujemnej kwoty!")
+		return
+	}
+
+	if getBal(userID) < toDep {
+		sendErrf(msg.ChannelID, "Nie masz tyle %s w portfelu! (%d > %d)", cnf.MoneyIcon, toDep, getBal(userID))
+		return
+	}
+
+	changeBal(userID, getBal(userID)-toDep)
+	changeBank(userID, getBank(userID)+toDep)
+
+	sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
+		Title:       "💼 Wpłata",
+		Description: fmt.Sprintf("Pomyślnie wpłacono %d%s na konto bankowe!", toDep, cnf.MoneyIcon),
+	})
+}
+
+func withCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
+	var toWith int64
+	switch len(cmd) {
+	case 1:
+		toWith = getBank(userID)
+	case 2:
+		if x, err := strconv.Atoi(cmd[1]); err != nil {
+			sendErrf(msg.ChannelID, "Niepoprawna kwota! Podaj poprawną liczbę po poleceniu %swith", cnf.CommandPrefix)
+			return
+		} else {
+			toWith = int64(x)
+		}
+	}
+
+	if toWith < 0 {
+		sendErr(msg.ChannelID, "Nie możesz wypłacić ujemnej kwoty!")
+		return
+	}
+
+	if getBank(userID) < toWith {
+		sendErrf(msg.ChannelID, "Nie masz tyle %s na koncie bankowym! (%d > %d)", cnf.MoneyIcon, toWith, getBank(userID))
+		return
+	}
+
+	changeBank(userID, getBank(userID)-toWith)
+	changeBal(userID, getBal(userID)+toWith)
+
+	sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
+		Title:       "🏦 Wypłata",
+		Description: fmt.Sprintf("Pomyślnie wypłacono %d%s z konta bankowego!", toWith, cnf.MoneyIcon),
+	})
+}

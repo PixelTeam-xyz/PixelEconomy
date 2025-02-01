@@ -1,57 +1,60 @@
 package main
 
 import (
-    "msg"
-    "os"
+	"msg"
+	"os"
 
-    "github.com/BurntSushi/toml"
+	"github.com/BurntSushi/toml"
 )
 
 type Config struct {
-    MoneyIcon      string `toml:"MoneyIcon"`
-    WorkDelay      int    `toml:"WorkDelay"`
-    DatabasePath   string `toml:"DatabasePath"`
-    WorkMin        int    `toml:"WorkEarningsMin"`
-    WorkMax        int    `toml:"WorkEarningsMax"`
-    TopCh          int64  `toml:"TopMessagesChannelID"` //  If the value is -1, it will not send the top list
-    CommandPrefix  string `toml:"CommandPrefix"`
-    MainEmbedColor int    `toml:"MainEmbedColor"`
+	MoneyIcon              string `toml:"MoneyIcon"`
+	WorkDelay              int    `toml:"WorkDelay"`
+	DatabasePath           string `toml:"DatabasePath"`
+	WorkMin                int    `toml:"WorkEarningsMin"`
+	WorkMax                int    `toml:"WorkEarningsMax"`
+	TopCh                  int64  `toml:"TopMessagesChannelID"` //  If the value is -1, it will not send the top list
+	CommandPrefix          string `toml:"CommandPrefix"`
+	MainEmbedColor         int    `toml:"MainEmbedColor"`
+	ServerID               string `toml:"ServerID"`
+	NumberOfUsersInTopList int    `toml:"NumberOfUsersInTopList"`
 
-    // TODO: Add more configuration options
+	// TODO: Add more configuration options
 }
 
 var defaultConfig = Config{
-    MoneyIcon:      "💴",
-    WorkDelay:      30,
-    DatabasePath:   "economy.db",
-    WorkMin:        50,
-    WorkMax:        200,
-    TopCh:          -1,
-    CommandPrefix:  "!",
-    MainEmbedColor: colors["skyblue"],
+	MoneyIcon:              "💴",
+	WorkDelay:              30,
+	DatabasePath:           "economy.db",
+	WorkMin:                50,
+	WorkMax:                200,
+	TopCh:                  -1,
+	CommandPrefix:          "!",
+	MainEmbedColor:         colors["skyblue"],
+	NumberOfUsersInTopList: 10,
 }
 
 func loadCnf() Config {
-    var config Config
+	var config Config
 
-    if _, err := toml.DecodeFile("config.toml", &config); err != nil {
-        msg.Fatalf("Error reading config.toml or file does not exist! Using the default configuration")
-        return defaultConfig
-    }
+	if _, err := toml.DecodeFile("config.toml", &config); err != nil {
+		msg.Fatalf("Error reading config.toml or file does not exist! Using the default configuration")
+		return defaultConfig
+	}
 
-    return config
+	return config
 }
 
 func createDefault() error {
-    file, err := os.Create("config.toml")
-    if err != nil {
-        return err
-    }
-    defer file.Close()
+	file, err := os.Create("config.toml")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 
-    encoder := toml.NewEncoder(file)
-    if err := encoder.Encode(defaultConfig); err != nil {
-        return err
-    }
-    return nil
+	encoder := toml.NewEncoder(file)
+	if err := encoder.Encode(defaultConfig); err != nil {
+		return err
+	}
+	return nil
 }
