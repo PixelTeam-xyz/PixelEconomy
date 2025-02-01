@@ -75,3 +75,4 @@ func workCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 	})
 	//balCommand(msg, userID, []string{"bal"})
 }
+
