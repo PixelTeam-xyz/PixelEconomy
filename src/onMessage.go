@@ -11,6 +11,7 @@ func onMessage(bot *dsc.Session, msg *dsc.MessageCreate) {
     if msg.Author.Bot {
         return
     }
+    userID := msg.Author.ID
 
     if HasPrefix(msg.Content, cnf.CommandPrefix) {
         cmd := strings.Split(TrimPrefix(msg.Content, cnf.CommandPrefix), " ")
@@ -20,9 +21,9 @@ func onMessage(bot *dsc.Session, msg *dsc.MessageCreate) {
 
         switch cmd[0] {
         case "work":
-            // TODO
+            workCommand(msg, userID, cmd)
         case "bal", "balance":
-            // TODO
+            balCommand(msg, userID, cmd)
         case "top":
             // TODO
         case "buy":

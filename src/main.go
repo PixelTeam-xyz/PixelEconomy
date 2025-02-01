@@ -14,6 +14,7 @@ import (
 var (
     cnf Config = loadCnf()
     db  *sql.DB
+    bot *dsc.Session
 )
 
 func ShowError(msgs ...any) {
@@ -39,7 +40,7 @@ func main() {
         ShowError("Put your bot token in the token.txt file and then restart the bot")
     }
 
-    bot, err := dsc.New("Bot " + tk)
+    bot, err = dsc.New("Bot " + tk)
     Except("Opening connection to discord API failed (%s)", err, ConnectToDiscordAPIErrorExit)
 
     botUser, err := bot.User("@me")
@@ -49,6 +50,6 @@ func main() {
     err = bot.Open()
     Except("Opening connection to discord API failed (%s)", err, ConnectToDiscordAPIErrorExit)
 
-    msg.Infof("The bot successfully connected to the discord API as a %s", botUser.Username)
+    msg.Infof("The bot successfully connected to the discord API as a %s (%s)", botUser.Username, botUser.ID)
     select {}
 }

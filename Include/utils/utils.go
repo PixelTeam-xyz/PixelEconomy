@@ -60,6 +60,27 @@ func TrimPrefix(str string, prefix any) string {
     }
 }
 
+func HasSuffix(str string, suffix any) bool {
+    switch s := suffix.(type) {
+    case string:
+        return strings.HasSuffix(str, s)
+    case rune:
+        return strings.HasSuffix(str, string(s))
+    case int:
+        return strings.HasSuffix(str, strconv.Itoa(s))
+    case float64:
+        return strings.HasSuffix(str, strconv.FormatFloat(s, 'f', -1, 64))
+    case bool:
+        return strings.HasSuffix(str, strconv.FormatBool(s))
+    case byte:
+        return strings.HasSuffix(str, string(s))
+    case []byte:
+        return strings.HasSuffix(str, string(s))
+    default:
+        return false
+    }
+}
+
 func TrimSuffix(str string, suffix any) string {
     switch s := suffix.(type) {
     case string:

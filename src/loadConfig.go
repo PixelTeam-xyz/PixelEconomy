@@ -8,26 +8,27 @@ import (
 )
 
 type Config struct {
-    b             string `toml:"MoneyIcon"`
-    WorkDelay     int    `toml:"WorkDelay"`
-    database      string `toml:"DatabasePath"`
-    WorkMin       int    `toml:"WorkEarningsMin"`
-    WorkMax       int    `toml:"WorkEarningsMax"`
-    TopCh         int64  `toml:"TopMessagesChannelID"`
-    CommandPrefix rune   `toml:"CommandPrefix"`
-    // If the value is -1, it will not send the top list ^^^^
+    MoneyIcon      string `toml:"MoneyIcon"`
+    WorkDelay      int    `toml:"WorkDelay"`
+    DatabasePath   string `toml:"DatabasePath"`
+    WorkMin        int    `toml:"WorkEarningsMin"`
+    WorkMax        int    `toml:"WorkEarningsMax"`
+    TopCh          int64  `toml:"TopMessagesChannelID"` //  If the value is -1, it will not send the top list
+    CommandPrefix  string `toml:"CommandPrefix"`
+    MainEmbedColor int    `toml:"MainEmbedColor"`
 
     // TODO: Add more configuration options
 }
 
 var defaultConfig = Config{
-    b:             "💴",
-    WorkDelay:     30,
-    database:      "economy.db",
-    WorkMin:       50,
-    WorkMax:       200,
-    TopCh:         -1,
-    CommandPrefix: '!',
+    MoneyIcon:      "💴",
+    WorkDelay:      30,
+    DatabasePath:   "economy.db",
+    WorkMin:        50,
+    WorkMax:        200,
+    TopCh:          -1,
+    CommandPrefix:  "!",
+    MainEmbedColor: colors["skyblue"],
 }
 
 func loadCnf() Config {
