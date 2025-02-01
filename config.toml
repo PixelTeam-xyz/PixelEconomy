@@ -1,8 +1,0 @@
-MoneyIcon = "💴"
-WorkDelay = 30
-DatabasePath = "economy.db"
-WorkEarningsMin = 50
-WorkEarningsMax = 200
-TopMessagesChannelID = -1
-CommandPrefix = "."
-MainEmbedColor = 8900331
