@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func changeBal(user string, newBal int64) {
+func changeBal(user any, newBal int64) {
 	stmtUpdate, err := db.Prepare("UPDATE users SET balance = ? WHERE id = ?")
 	Except(err, DatabaseErrorExit)
 	defer stmtUpdate.Close()
@@ -28,7 +28,7 @@ func changeBal(user string, newBal int64) {
 	}
 }
 
-func changeBank(user string, newBal int64) {
+func changeBank(user any, newBal int64) {
 	stmtUpdate, err := db.Prepare("UPDATE users SET bank = ? WHERE id = ?")
 	Except(err, DatabaseErrorExit)
 	defer stmtUpdate.Close()
@@ -49,7 +49,7 @@ func changeBank(user string, newBal int64) {
 	}
 }
 
-func getBal(userID string) int64 {
+func getBal(userID any) int64 {
 	var balance int64
 	err := db.QueryRow("SELECT balance FROM users WHERE id = ?", userID).Scan(&balance)
 	if err == sql.ErrNoRows {
@@ -59,7 +59,7 @@ func getBal(userID string) int64 {
 	return balance
 }
 
-func getBank(userID string) int64 {
+func getBank(userID any) int64 {
 	var balance int64
 	err := db.QueryRow("SELECT bank FROM users WHERE id = ?", userID).Scan(&balance)
 	if err == sql.ErrNoRows {
@@ -69,7 +69,7 @@ func getBank(userID string) int64 {
 	return balance
 }
 
-func canWork(userID string) (bool, int) {
+func canWork(userID any) (bool, int) {
 	var lastWork time.Time
 
 	err := db.QueryRow("SELECT lastWork FROM users WHERE id = ?", userID).Scan(&lastWork)

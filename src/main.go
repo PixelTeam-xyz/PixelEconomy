@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	dsc "github.com/bwmarrin/discordgo"
 	"io/ioutil"
 	"msg"
@@ -9,13 +8,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	. "utils"
-)
-
-var (
-	cnf     Config = loadCnf()
-	db      *sql.DB
-	bot     *dsc.Session
-	botUser *dsc.User
 )
 
 func ShowError(msgs ...any) {
@@ -43,14 +35,17 @@ func main() {
 
 	bot, err = dsc.New("Bot " + tk)
 	Except("Opening connection to discord API failed (%s)", err, ConnectToDiscordAPIErrorExit)
+	bot.Identify.Intents = dsc.IntentsAll
 
 	botUser, err = bot.User("@me")
 
 	bot.AddHandler(onMessage)
+	bot.AddHandler(onInteraction)
+	bot.AddHandler(onReady)
+	bot.AddHandler(onConnectionResumed)
 
 	err = bot.Open()
 	Except("Opening connection to discord API failed (%s)", err, ConnectToDiscordAPIErrorExit)
 
-	msg.Infof("The bot successfully connected to the discord API as a %s (%s)", botUser.Username, botUser.ID)
 	select {}
 }
