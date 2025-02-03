@@ -13,29 +13,31 @@ func Except(args ...any) {
 	var exitCode *int
 	var f string
 
-	for _, arg := range args {
-		switch v := arg.(type) {
-		case error:
-			err = v
-		case int:
-			exitCode = &v
-		case string:
-			f = v
+	go func() {
+		for _, arg := range args {
+			switch v := arg.(type) {
+			case error:
+				err = v
+			case int:
+				exitCode = &v
+			case string:
+				f = v
+			}
 		}
-	}
 
-	if f == "" {
-		f = "%s"
-	}
-
-	if err != nil {
-		if exitCode != nil {
-			msg.Errorf(f, err.Error())
-			os.Exit(*exitCode)
-		} else {
-			msg.Fatalf(f, err.Error())
+		if f == "" {
+			f = "%s"
 		}
-	}
+
+		if err != nil {
+			if exitCode != nil {
+				msg.Errorf(f, err.Error())
+				os.Exit(*exitCode)
+			} else {
+				msg.Fatalf(f, err.Error())
+			}
+		}
+	}()
 }
 
 func SendMsg(channelID string, f string, x ...any) {

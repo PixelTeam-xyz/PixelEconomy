@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	dsc "github.com/bwmarrin/discordgo"
+	log "msg"
 	"strconv"
 	"time"
 	. "utils"
@@ -34,10 +35,14 @@ func balCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 		incorrect()
 		return
 	}
+
+	user, err := bot.User(usr)
+	Except(err)
+
 	sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
 		Author: &dsc.MessageEmbedAuthor{
-			Name:    fmt.Sprintf("%s    - Stan konta", msg.Author.Username),
-			IconURL: msg.Author.AvatarURL("512"),
+			Name:    fmt.Sprintf("%s    - Stan konta", user.Username),
+			IconURL: user.AvatarURL("512"),
 		},
 		//Title: fmt.Sprintf("Stan konta"),
 		Color: cnf.MainEmbedColor,
@@ -63,6 +68,7 @@ func balCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 
 func workCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 	if can, remaining := canWork(userID); !can {
+		log.Debugf("can: %v, remaining: %v...", can, remaining)
 		nextWorkTime := time.Now().Add(time.Duration(remaining) * time.Second)
 		sendErr(msg.ChannelID,
 			fmt.Sprintf("Będziesz mógł pracować dopiero <t:%d:R> 🕒", nextWorkTime.Unix()),
@@ -71,7 +77,7 @@ func workCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 	}
 	income := int64(randInt(cnf.WorkMax, cnf.WorkMin))
 	changeBal(userID, getBal(userID)+income)
-	db.Exec("UPDATE users SET lastWork = ? WHERE id = ?", time.Now(), userID)
+	db.Exec("UPDATE users SET lastWork = ? WHERE id = ?", time.Now().UTC(), userID)
 	sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
 		Title:       "💼 Pracowałeś!",
 		Description: fmt.Sprintf("Zarobiłeś %d%s!", income, cnf.MoneyIcon),
@@ -79,13 +85,15 @@ func workCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 	})
 }
 
-func depCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
+func depCommand(msg *dsc.MessageCreate, userID string, cmd []string) (success bool) {
 	var toDep int64
 	switch len(cmd) {
 	case 1:
 		toDep = getBal(userID)
 	case 2:
-		if x, err := strconv.Atoi(cmd[1]); err != nil {
+		if cmd[1] == "all" {
+			toDep = getBal(userID)
+		} else if x, err := strconv.Atoi(cmd[1]); err != nil {
 			sendErrf(msg.ChannelID, "Niepoprawna kwota! Podaj poprawną liczbe po poleceniu %sdep", cnf.CommandPrefix)
 			return
 		} else {
@@ -109,16 +117,20 @@ func depCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 	sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
 		Title:       "💼 Wpłata",
 		Description: fmt.Sprintf("Pomyślnie wpłacono %d%s na konto bankowe!", toDep, cnf.MoneyIcon),
+		Color:       colors["green"],
 	})
+	return true
 }
 
-func withCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
+func withCommand(msg *dsc.MessageCreate, userID string, cmd []string) (success bool) {
 	var toWith int64
 	switch len(cmd) {
 	case 1:
 		toWith = getBank(userID)
 	case 2:
-		if x, err := strconv.Atoi(cmd[1]); err != nil {
+		if cmd[1] == "all" {
+			toWith = getBank(userID)
+		} else if x, err := strconv.Atoi(cmd[1]); err != nil {
 			sendErrf(msg.ChannelID, "Niepoprawna kwota! Podaj poprawną liczbę po poleceniu %swith", cnf.CommandPrefix)
 			return
 		} else {
@@ -142,5 +154,7 @@ func withCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 	sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
 		Title:       "🏦 Wypłata",
 		Description: fmt.Sprintf("Pomyślnie wypłacono %d%s z konta bankowego!", toWith, cnf.MoneyIcon),
+		Color:       colors["green"],
 	})
+	return true
 }

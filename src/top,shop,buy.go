@@ -10,7 +10,7 @@ func ShowTop(ch string) {
 	Except("Failed to retrieve top list from database (%s)", err)
 	topEmbed := dsc.MessageEmbed{
 		Title: fmt.Sprintf("Top %d użytkowników", func() int {
-			if cnf.NumberOfUsersInTopList > len(top) {
+			if cnf.NumberOfUsersInTopList < len(top) {
 				return cnf.NumberOfUsersInTopList
 			}
 			return len(top)

@@ -3,12 +3,21 @@ package main
 import (
 	"fmt"
 	dsc "github.com/bwmarrin/discordgo"
-	log "msg"
 	"strconv"
 	"strings"
 )
 
-func isAdmin(user dsc.User) (isAdm bool) {
+func noPerms(msg *dsc.MessageCreate) {
+	_, err := bot.ChannelMessageSendEmbed(msg.ChannelID, &dsc.MessageEmbed{
+		Title:       "🛑 Brak uprawnień!",
+		Description: "Aby użyć tej komendy musisz mieć uprawnienia administratora!",
+		Color:       colors["red"],
+	})
+	Except(err)
+	return
+}
+
+func isAdmin(serverID string, user dsc.User) (isAdm bool) {
 	for _, adminID := range cnf.AdminUsersIDs {
 		if user.ID == strconv.FormatInt(adminID, 10) {
 			isAdm = true
@@ -17,7 +26,7 @@ func isAdmin(user dsc.User) (isAdm bool) {
 	}
 
 	if !isAdm {
-		usr, err := bot.GuildMember(cnf.ServerID, user.ID)
+		usr, err := bot.GuildMember(serverID, user.ID)
 		if err != nil {
 			Except(err)
 			return false
@@ -40,18 +49,8 @@ func isAdmin(user dsc.User) (isAdm bool) {
 }
 
 func ecoCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
-	usr, err := bot.GuildMember(cnf.ServerID, msg.Author.ID)
-	if err != nil {
-		log.Debugf("AdminUsers: %v, AdminRoles: %v, UserRoles: %v, isAdmin?: %v", cnf.AdminUsersIDs, cnf.AdminRolesIDs, usr.Roles, isAdmin(*msg.Author))
-	}
-
-	if !isAdmin(*msg.Author) {
-		_, err := bot.ChannelMessageSendEmbed(msg.ChannelID, &dsc.MessageEmbed{
-			Title:       "🛑 Brak uprawnień!",
-			Description: "Aby użyć tej komendy musisz mieć uprawnienia administratora!",
-			Color:       colors["red"],
-		})
-		Except(err)
+	if !isAdmin(msg.GuildID, *msg.Author) {
+		noPerms(msg)
 		return
 	}
 
@@ -146,18 +145,46 @@ func ecoCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 
 	sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
 		Title: "💾 Sukces",
-		Description: fmt.Sprintf("Pomyślnie "+opStr, amount, func() string {
+		Description: fmt.Sprintf("Pomyślnie "+opStr+"\n%s", amount, func() string {
 			if target {
 				return "banku"
 			} else {
 				return "portfela"
 			}
-		}(), user.Username),
-		Fields: []*dsc.MessageEmbedField{
-			{
-				Name: fmt.Sprintf("Aktualny stan konta %s:", user.Username),
+		}(), user.Username, fmt.Sprintf("**Aktualny stan konta <@%s>:**", user.ID)),
+		Color: colors["green"],
+	})
+	go balCommand(msg, userID, []string{"bal", fmt.Sprintf("<@%s>", user.ID)})
+}
+
+func restartCommand(msg *dsc.MessageCreate, _ string, _ []string) {
+	if !isAdmin(msg.GuildID, *msg.Author) {
+		noPerms(msg)
+		return
+	}
+
+	infoEmbed := &dsc.MessageEmbed{
+		Title:       "**UWAGA!**",
+		Description: "Ta operacja USUNIE CAŁĄ BAZE DANYCH, wszystkie zapisane rzeczy w tym stany konta użytkowników itp. zostaną PERNAMĘTNIE usunięte, NIE DA SIĘ ICH PRZYWRÓCIĆ (chyba że masz backupa). Czy na pewno chcesz to zrobić?",
+		Color:       colors["red"],
+	}
+	bot.ChannelMessageSendComplex(msg.ChannelID, &dsc.MessageSend{
+		Embed: infoEmbed,
+		Components: []dsc.MessageComponent{
+			dsc.ActionsRow{
+				Components: []dsc.MessageComponent{
+					dsc.Button{
+						Label:    "Rozumiem konsekwencje i mimo to chce wykonać ta operacje",
+						Style:    dsc.DangerButton,
+						CustomID: "BUTTON_TO_DELETE_THE_ENTIRE_DATABASE",
+					},
+					dsc.Button{
+						Label:    "Anuluj",
+						Style:    dsc.PrimaryButton,
+						CustomID: "delete_message",
+					},
+				},
 			},
 		},
 	})
-	balCommand(msg, userID, []string{"bal", fmt.Sprintf("<@%s>", user.ID)})
 }

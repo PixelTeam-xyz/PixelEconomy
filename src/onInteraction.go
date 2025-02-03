@@ -1,24 +1,51 @@
 package main
 
 import (
-	"github.com/bwmarrin/discordgo"
+	dsc "github.com/bwmarrin/discordgo"
+	"os"
 )
 
-func onInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Type != discordgo.InteractionMessageComponent {
+func onInteraction(_ *dsc.Session, i *dsc.InteractionCreate) {
+	if i.Type != dsc.InteractionMessageComponent {
 		return
 	}
 
-	if i.MessageComponentData().CustomID == "delete_message" {
-		err := s.ChannelMessageDelete(i.ChannelID, i.Message.ID)
+	switch i.MessageComponentData().CustomID {
+	case "delete_message":
+		err := bot.ChannelMessageDelete(i.ChannelID, i.Message.ID)
 		Except(err)
 
-		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseUpdateMessage,
-			Data: &discordgo.InteractionResponseData{
-				Components: []discordgo.MessageComponent{},
+		err = bot.InteractionRespond(i.Interaction, &dsc.InteractionResponse{
+			Type: dsc.InteractionResponseUpdateMessage,
+			Data: &dsc.InteractionResponseData{
+				Components: []dsc.MessageComponent{},
 			},
 		})
 		Except(err)
+
+	case "BUTTON_TO_DELETE_THE_ENTIRE_DATABASE":
+		if !isAdmin(i.GuildID, *i.Member.User) {
+			bot.InteractionRespond(i.Interaction, &dsc.InteractionResponse{
+				Type: dsc.InteractionResponseChannelMessageWithSource,
+				Data: &dsc.InteractionResponseData{
+					Flags:   dsc.MessageFlagsEphemeral,
+					Content: "Nie masz uprawnień do wykonania tej operacji ||(kurwa debil, serio myślałeś że usuniesz całą baze danych bez uprawnień?)||",
+				},
+			})
+			return
+		}
+
+		err := os.Remove(cnf.DatabasePath)
+		Except(err, DatabaseErrorExit)
+
+		bot.InteractionRespond(i.Interaction, &dsc.InteractionResponse{
+			Type: dsc.InteractionResponseChannelMessageWithSource,
+			Data: &dsc.InteractionResponseData{
+				Content: "Cała baza danych została usunięta! Dla bezpieczeństwa bot musi teraz zostać wyłączony, włącz go ponownie aby używać dalej",
+			},
+		})
+
+		db.Close()
+		os.Exit(0)
 	}
 }
