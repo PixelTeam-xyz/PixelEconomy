@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	dsc "github.com/bwmarrin/discordgo"
-	log "msg"
+	"info"
 	"strconv"
 	"time"
 	. "utils"
@@ -49,17 +49,17 @@ func balCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 		Fields: []*dsc.MessageEmbedField{
 			{
 				Name:   "👛 Portfel:  ",
-				Value:  fmt.Sprintf("%d %s", getBal(usr), cnf.MoneyIcon),
+				Value:  fmt.Sprintf("%s", ToMoneyStr(getBal(usr))),
 				Inline: true,
 			},
 			{
 				Name:   "🏦 Bank:  ",
-				Value:  fmt.Sprintf("%d %s", getBank(usr), cnf.MoneyIcon),
+				Value:  fmt.Sprintf("%s", ToMoneyStr(getBank(usr))),
 				Inline: true,
 			},
 			{
 				Name:   "💰 Łącznie:  ",
-				Value:  fmt.Sprintf("%d %s", getBal(usr)+getBank(usr), cnf.MoneyIcon),
+				Value:  fmt.Sprintf("%s", ToMoneyStr(getBal(usr)+getBank(usr))),
 				Inline: true,
 			},
 		},
@@ -68,7 +68,7 @@ func balCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 
 func workCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 	if can, remaining := canWork(userID); !can {
-		log.Debugf("can: %v, remaining: %v...", can, remaining)
+		info.Debugf("can: %v, remaining: %v...", can, remaining)
 		nextWorkTime := time.Now().Add(time.Duration(remaining) * time.Second)
 		sendErr(msg.ChannelID,
 			fmt.Sprintf("Będziesz mógł pracować dopiero <t:%d:R> 🕒", nextWorkTime.Unix()),
@@ -80,7 +80,7 @@ func workCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 	db.Exec("UPDATE users SET lastWork = ? WHERE id = ?", time.Now().UTC(), userID)
 	sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
 		Title:       "💼 Pracowałeś!",
-		Description: fmt.Sprintf("Zarobiłeś %d%s!", income, cnf.MoneyIcon),
+		Description: fmt.Sprintf("Zarobiłeś %s!", ToMoneyStr(income)),
 		Color:       cnf.MainEmbedColor,
 	})
 }
@@ -116,7 +116,7 @@ func depCommand(msg *dsc.MessageCreate, userID string, cmd []string) (success bo
 
 	sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
 		Title:       "💼 Wpłata",
-		Description: fmt.Sprintf("Pomyślnie wpłacono %d%s na konto bankowe!", toDep, cnf.MoneyIcon),
+		Description: fmt.Sprintf("Pomyślnie wpłacono %s na konto bankowe!", ToMoneyStr(toDep)),
 		Color:       colors["green"],
 	})
 	return true
@@ -153,7 +153,7 @@ func withCommand(msg *dsc.MessageCreate, userID string, cmd []string) (success b
 
 	sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
 		Title:       "🏦 Wypłata",
-		Description: fmt.Sprintf("Pomyślnie wypłacono %d%s z konta bankowego!", toWith, cnf.MoneyIcon),
+		Description: fmt.Sprintf("Pomyślnie wypłacono %s z konta bankowego!", ToMoneyStr(toWith)),
 		Color:       colors["green"],
 	})
 	return true

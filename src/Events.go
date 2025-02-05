@@ -2,7 +2,7 @@ package main
 
 import (
 	dsc "github.com/bwmarrin/discordgo"
-	"msg"
+	info "info"
 	"strconv"
 	"time"
 )
@@ -20,7 +20,7 @@ var tasks = []func(){
 				Except("Rrror while getting channel: %s", err)
 
 				if channel.Type != dsc.ChannelTypeGuildText {
-					msg.Fatal("channel 'TopMessagesChannelID' (from config) is not a text channel!")
+					info.Fatal("channel 'TopMessagesChannelID' (from config) is not a text channel!")
 				}
 
 				// Check bot permissions
@@ -28,7 +28,7 @@ var tasks = []func(){
 				Except("error while checking permissions: %s", err)
 
 				if perms&dsc.PermissionManageMessages == 0 {
-					msg.Fatal("bot does not have permission to manage messages!")
+					info.Fatal("bot does not have permission to manage messages!")
 				}
 
 				var allMessages []*dsc.Message
@@ -57,12 +57,12 @@ var tasks = []func(){
 }
 
 func onReady(_ *dsc.Session, event *dsc.Ready) {
-	msg.Infof("The bot successfully connected to the discord API as a %s (%s). SessionID: %s", botUser.Username, botUser.ID, event.SessionID)
+	info.Infof("The bot successfully connected to the discord API as a %s (%s). SessionID: %s", botUser.Username, botUser.ID, event.SessionID)
 	for _, event := range tasks {
 		go event()
 	}
 }
 
 func onConnectionResumed(_ *dsc.Session, event *dsc.Resumed) {
-	msg.Info("The bot has regained its connection to Discord!")
+	info.Info("The bot has regained its connection to Discord!")
 }

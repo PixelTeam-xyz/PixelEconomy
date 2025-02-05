@@ -28,5 +28,6 @@ func ShowTop(ch string) {
 			Inline: false,
 		})
 	}
+
 	sendEmbed(ch, &topEmbed)
 }

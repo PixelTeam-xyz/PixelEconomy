@@ -4,6 +4,7 @@
 
 
 
+
 -----
 
 **[ 2025-02-01 16:40 ]**: New commands and options
@@ -19,3 +20,7 @@
 -----
 
 **[ 2025-02-03 21:44 ]**: Rename `eco....go` to `AdminCommands.go`, New restart command [160: AdminCommands.go] and minor fixes
+
+-----
+
+**[ 2025-02-05 13:27 ]**: I changed the package name `msg` (`./Include/msg`) to `info` (`./Include/info`) so as not to create name conflicts

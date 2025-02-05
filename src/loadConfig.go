@@ -1,29 +1,32 @@
 package main
 
 import (
-	"msg"
+	"info"
 	"os"
 
 	"github.com/BurntSushi/toml"
 )
 
 type Config struct {
-	MoneyIcon                        string  `toml:"MoneyIcon"`
-	WorkDelay                        int     `toml:"WorkDelay"`
-	DatabasePath                     string  `toml:"DatabasePath"`
-	WorkMin                          int     `toml:"WorkEarningsMin"`
-	WorkMax                          int     `toml:"WorkEarningsMax"`
-	TopCh                            int64   `toml:"TopMessagesChannelID"`
-	DelPrevTopListOnNewSend          bool    `toml:"DelPrevTopListOnNewSend"`
-	DelayInSendingTopList            int     `toml:"DelayInSendingTopList"`
-	CommandPrefix                    string  `toml:"CommandPrefix"`
-	MainEmbedColor                   int     `toml:"MainEmbedColor"`
-	ServerID                         string  `toml:"ServerID"`
-	NumberOfUsersInTopList           int     `toml:"NumberOfUsersInTopList"`
-	AllowedChannels                  []int64 `toml:"AllowedChannels"`
-	DisappearanceTimeOfErrorMessages int     `toml:"DisappearanceTimeOfErrorMessages"`
-	AdminUsersIDs                    []int64 `toml:"AdminUsersIDs"`
-	AdminRolesIDs                    []int64 `toml:"AdminRolesIDs"`
+	MoneyIcon                        string
+	WorkDelay                        int
+	DatabasePath                     string
+	WorkMin                          int
+	WorkMax                          int
+	TopCh                            int64
+	DelPrevTopListOnNewSend          bool
+	DelayInSendingTopList            int
+	CommandPrefix                    string
+	MainEmbedColor                   int
+	ServerID                         string
+	NumberOfUsersInTopList           int
+	AllowedChannels                  []int64
+	DisappearanceTimeOfErrorMessages int
+	AdminUsersIDs                    []int64
+	AdminRolesIDs                    []int64
+	RobberySuccesChance              int8
+	RobSuccessMin                    int
+	RobSuccessMax                    int
 }
 
 type GroupedConfig struct {
@@ -34,9 +37,12 @@ type GroupedConfig struct {
 		MainEmbedColor int    `toml:"MainEmbedColor"`
 	} `toml:"General"`
 	Economy struct {
-		WorkMin   int `toml:"WorkEarningsMin"`
-		WorkMax   int `toml:"WorkEarningsMax"`
-		WorkDelay int `toml:"WorkDelay"`
+		WorkMin             int  `toml:"WorkEarningsMin"`
+		WorkMax             int  `toml:"WorkEarningsMax"`
+		WorkDelay           int  `toml:"WorkDelay"`
+		RobberySuccesChance int8 `toml:"RobberySuccesChance"`
+		RobSuccessMin       int  `toml:"RobSuccessMin"`
+		RobSuccessMax       int  `toml:"RobSuccessMax"`
 	} `toml:"Economy"`
 	TopList struct {
 		TopCh                   int64 `toml:"TopMessagesChannelID"`
@@ -73,6 +79,9 @@ func (self *GroupedConfig) toConfig() Config {
 		AdminUsersIDs:                    self.Server.AdminUsersIDs,
 		AdminRolesIDs:                    self.Server.AdminRolesIDs,
 		DisappearanceTimeOfErrorMessages: self.Messages.DisappearanceTimeOfErrorMessages,
+		RobberySuccesChance:              self.Economy.RobberySuccesChance,
+		RobSuccessMax:                    self.Economy.RobSuccessMax,
+		RobSuccessMin:                    self.Economy.RobSuccessMin,
 	}
 }
 
@@ -92,6 +101,9 @@ func (self Config) ToGrouped() GroupedConfig {
 	gc.Server.ServerID = self.ServerID
 	gc.Server.AllowedChannels = self.AllowedChannels
 	gc.Messages.DisappearanceTimeOfErrorMessages = self.DisappearanceTimeOfErrorMessages
+	gc.Economy.RobberySuccesChance = self.RobberySuccesChance
+	gc.Economy.RobSuccessMin = self.RobSuccessMin
+	gc.Economy.RobSuccessMax = self.RobSuccessMax
 	return gc
 }
 
@@ -99,8 +111,8 @@ var defaultConfig = Config{
 	MoneyIcon:                        "💴",
 	WorkDelay:                        30,
 	DatabasePath:                     "economy.db",
-	WorkMin:                          50,
-	WorkMax:                          200,
+	WorkMin:                          100,
+	WorkMax:                          300,
 	TopCh:                            -1,
 	DelPrevTopListOnNewSend:          true,
 	DelayInSendingTopList:            3600,
@@ -109,12 +121,15 @@ var defaultConfig = Config{
 	NumberOfUsersInTopList:           10,
 	AllowedChannels:                  []int64{},
 	DisappearanceTimeOfErrorMessages: 5,
+	RobberySuccesChance:              50,
+	RobSuccessMax:                    400,
+	RobSuccessMin:                    50,
 }
 
 func loadCnf() Config {
 	var gc GroupedConfig
 	if _, err := toml.DecodeFile("config.toml", &gc); err != nil {
-		msg.Fatalf("Error reading config.toml or file does not exist! Using the default configuration")
+		info.Fatalf("Error reading config.toml or file does not exist! Using the default configuration")
 		return defaultConfig
 	}
 	return gc.toConfig()

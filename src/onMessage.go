@@ -77,6 +77,8 @@ func onMessage(_ *dsc.Session, msg *dsc.MessageCreate) {
 			if s {
 				go balCommand(msg, userID, []string{"bal"})
 			}
+		case "rob":
+			robCommand(msg, msg.Author.ID, cmd)
 		case "top":
 			ShowTop(msg.ChannelID)
 		case "eco", "economy":

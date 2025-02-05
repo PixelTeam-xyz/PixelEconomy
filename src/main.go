@@ -2,8 +2,8 @@ package main
 
 import (
 	dsc "github.com/bwmarrin/discordgo"
+	"info"
 	"io/ioutil"
-	"msg"
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -11,7 +11,7 @@ import (
 )
 
 func ShowError(msgs ...any) {
-	msg.Error(msgs...)
+	info.Error(msgs...)
 	db.Close()
 	os.Exit(1)
 }
