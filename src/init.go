@@ -15,10 +15,29 @@ func init() {
 	Except(err, DatabaseErrorExit)
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users
-             (id INTEGER PRIMARY KEY, balance INTEGER, bank INTEGER, lastWork DATETIME, rank TEXT)`)
-
-	Except(err, DatabaseErrorExit)
+             (id INTEGER PRIMARY KEY, balance INTEGER, bank INTEGER, lastWork DATETIME, lastCrime DATETIME, lastRob DATETIME)`)
 
 	_, err = db.Exec("COMMIT")
 	Except(err, DatabaseErrorExit)
+
+	//rows, err := db.Query("SELECT id FROM users")
+	//Except(err)
+	//defer rows.Close()
+	//
+	//for rows.Next() {
+	//	var userID int
+	//	err := rows.Scan(&userID)
+	//	Except(err)
+	//
+	//	x, _ := canWork(userID)
+	//	y, _ := canRob(userID)
+	//	z, _ := canCrime(userID)
+	//
+	//	if !x || !y || !z {
+	//		refresh(strconv.Itoa(userID))
+	//	}
+	//}
+	//
+	//err = rows.Err()
+	//Except(err, DatabaseErrorExit)
 }

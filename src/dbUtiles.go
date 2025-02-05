@@ -75,30 +75,39 @@ func getBank(userID any) int64 {
 }
 
 func canWork(userID any) (bool, int) {
-	var lastWork time.Time
+	return canPerformAction(userID, "lastWork", cnf.WorkDelay)
+}
 
-	err := db.QueryRow("SELECT lastWork FROM users WHERE id = ?", userID).Scan(&lastWork)
+func canCrime(userID any) (bool, int) {
+	return canPerformAction(userID, "lastCrime", cnf.CrimeDelay)
+}
+
+func canRob(userID any) (bool, int) {
+	return canPerformAction(userID, "lastRob", cnf.RobDelay)
+}
+
+func canPerformAction(userID any, action string, delay int) (bool, int) {
+	var lastActionTime time.Time
+	query := fmt.Sprintf("SELECT %s FROM users WHERE id = ?", action)
+
+	err := db.QueryRow(query, userID).Scan(&lastActionTime)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return true, 0
 		}
-		info.Fatalf("Error checking if user can work: %s", err.Error())
-		return false, cnf.WorkDelay
+		info.Fatalf("Error checking if user can %s: %s", action, err.Error())
+		return false, delay
 	}
 
-	//fmt.Println("Last work:", lastWork)
-	//fmt.Println("Time since last work:", time.Since(lastWork).Seconds())
-
-	if time.Since(lastWork) > time.Duration(cnf.WorkDelay)*time.Second {
-		_, updateErr := db.Exec("UPDATE users SET lastWork = ? WHERE id = ?", time.Now().Add(-time.Duration(cnf.WorkDelay)*time.Second), userID)
+	if time.Since(lastActionTime) > time.Duration(delay)*time.Second {
+		updateQuery := fmt.Sprintf("UPDATE users SET %s = ? WHERE id = ?", action)
+		_, updateErr := db.Exec(updateQuery, time.Now().Add(-time.Duration(delay)*time.Second), userID)
 		if updateErr != nil {
-			Except("Failed to update lastWork:", updateErr)
-		} else {
-			lastWork = time.Now().Add(-time.Duration(cnf.WorkDelay) * time.Second)
+			Except(fmt.Sprintf("Failed to update %s: ", action)+"%s", updateErr)
 		}
 	}
 
-	remaining := int(float64(cnf.WorkDelay) - time.Since(lastWork).Seconds())
+	remaining := int(float64(delay) - time.Since(lastActionTime).Seconds())
 
 	if remaining <= 0 {
 		return true, 0
