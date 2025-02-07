@@ -18,6 +18,7 @@ const (
 var (
 	cnf     Config = loadCnf()
 	db      *sql.DB
+	items   []Item = getItems()
 	bot     *dsc.Session
 	botUser *dsc.User
 )

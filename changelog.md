@@ -1,5 +1,6 @@
 
 
+
 -----
 
 **[ 2025-02-01 16:40 ]**: New commands and options
@@ -23,3 +24,7 @@
 -----
 
 **[ 2025-02-05 20:39 ]**: New crime command `[85: rob,crime,rullette.go]`, fixes and delays in rob `[11: rob,crime,rullette.go]` and work `[68: work,bal,with,dep.go]`. More configuration options in config
+
+-----
+
+**[ 2025-02-07 17:07 ]**: New commands: buy `[59: top,shop,buy.go]` and shop buy `[36: top,shop,buy.go]`, and changing int64 to float64 in balances and user banks

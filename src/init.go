@@ -15,7 +15,7 @@ func init() {
 	Except(err, DatabaseErrorExit)
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users
-             (id INTEGER PRIMARY KEY, balance INTEGER, bank INTEGER, lastWork DATETIME, lastCrime DATETIME, lastRob DATETIME)`)
+             (id INTEGER PRIMARY KEY, balance REAL, bank REAL, lastWork DATETIME, lastCrime DATETIME, lastRob DATETIME)`)
 
 	_, err = db.Exec("COMMIT")
 	Except(err, DatabaseErrorExit)

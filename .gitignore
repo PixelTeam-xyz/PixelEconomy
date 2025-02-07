@@ -39,3 +39,4 @@ bin/
 token.txt
 economy.db
 config.toml
+items.json

@@ -3,6 +3,7 @@ module PixelEconomy
 go 1.23.4
 
 require (
+	PrettyPrint v0.0.0-00010101000000-000000000000
 	github.com/BurntSushi/toml v1.4.0
 	github.com/bwmarrin/discordgo v0.28.1
 	github.com/mattn/go-sqlite3 v1.14.24
@@ -17,6 +18,7 @@ require (
 )
 
 replace (
+	PrettyPrint => ./Include/PrettyPrint
 	info => ./Include/info
 	utils => ./Include/utils
 )

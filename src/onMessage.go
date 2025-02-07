@@ -23,6 +23,7 @@ func onMessage(_ *dsc.Session, msg *dsc.MessageCreate) {
 	//log.Debugf("msg.ChannelID: %s, allowed: %v, contains: %v", msg.ChannelID, allowed, In(allowed, msg.ChannelID))
 
 	userID := msg.Author.ID
+	var s bool
 
 	if HasPrefix(msg.Content, cnf.CommandPrefix) {
 		if !In(allowed, msg.ChannelID) && (cnf.AllowedChannels != nil && len(cnf.AllowedChannels) > 0) {
@@ -56,11 +57,18 @@ func onMessage(_ *dsc.Session, msg *dsc.MessageCreate) {
 			time.AfterFunc(time.Duration(cnf.DisappearanceTimeOfErrorMessages)*time.Second, func() { bot.ChannelMessageDelete(msg.ChannelID, msg.ID) })
 			return
 		}
+
 		commands := strings.Split(msg.Content, "\n")
+		bal := func() { go balCommand(msg, userID, []string{"bal"}) }
+
 		for _, cc := range commands {
 			cmd := strings.Split(TrimPrefix(strings.TrimSpace(cc), cnf.CommandPrefix), " ")
 			if parts := len(cmd); parts < 1 {
 				return
+			}
+
+			defaultCall := func(fn func(msg *dsc.MessageCreate, userID string, cmd []string) (success bool)) bool {
+				return fn(msg, userID, cmd)
 			}
 
 			switch strings.ToLower(strings.TrimSpace(cmd[0])) {
@@ -69,40 +77,31 @@ func onMessage(_ *dsc.Session, msg *dsc.MessageCreate) {
 			case "bal", "balance":
 				balCommand(msg, userID, cmd)
 			case "dep", "deposit":
-				s := depCommand(msg, userID, cmd)
-				if s {
-					go balCommand(msg, userID, []string{"bal"})
-				}
+				s = defaultCall(depCommand)
 			case "with", "withdraw":
-				s := withCommand(msg, userID, cmd)
-				if s {
-					go balCommand(msg, userID, []string{"bal"})
-				}
+				s = withCommand(msg, userID, cmd)
 			case "rob", "robbery":
-				s := robCommand(msg, msg.Author.ID, cmd)
-				if s {
-					go balCommand(msg, userID, []string{"bal"})
-				}
+				s = defaultCall(robCommand)
 			case "crime":
-				s := crimeCommand(msg, msg.Author.ID, cmd)
-				if s {
-					go balCommand(msg, userID, []string{"bal"})
-				}
+				s = defaultCall(robCommand)
+			case "buy":
+				s = defaultCall(buyCommand)
+			case "shop":
+				shopCommand(msg, userID, cmd)
 			case "top":
 				ShowTop(msg.ChannelID)
 			case "eco", "economy":
 				ecoCommand(msg, userID, cmd)
 			case "restart":
 				restartCommand(msg, userID, cmd)
-			case "buy":
-				// TODO
-			case "shop":
-				// TODO
-			case "help", "commands", "cmds":
-				go help(msg)
 			case "refresh":
 				refresh(userID)
+			case "help", "commands", "cmds":
+				go help(msg)
 			}
+		}
+		if s {
+			bal()
 		}
 	}
 }

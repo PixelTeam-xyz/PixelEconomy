@@ -66,12 +66,7 @@ func balCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 }
 
 func workCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
-	incorrect := func(why string) {
-		sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
-			Title:       fmt.Sprintf("Nie poprawny format komendy %swork! (%s)", cnf.CommandPrefix, why),
-			Description: fmt.Sprintf("Poprawne użycie: %swork *(brak argumentów)*", cnf.CommandPrefix),
-		})
-	}
+	incorrect := defaultIncorrect(msg, "work")
 
 	if len(cmd) != 1 {
 		incorrect("Nie poprawna ilość argumentów")
@@ -85,8 +80,8 @@ func workCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 		return
 	}
 
-	income := int64(randInt(cnf.WorkMax, cnf.WorkMin))
-	changeBal(userID, getBal(userID)+income)
+	income := float64(randInt(cnf.WorkMax, cnf.WorkMin))
+	changeBal(userID, getBal(userID)+income*getMultiplier(userID, msg))
 	refresh(userID, "work")
 	sendEmbed(msg.ChannelID, &dsc.MessageEmbed{
 		Title:       "💼 Pracowałeś!",
@@ -96,7 +91,7 @@ func workCommand(msg *dsc.MessageCreate, userID string, cmd []string) {
 }
 
 func depCommand(msg *dsc.MessageCreate, userID string, cmd []string) (success bool) {
-	var toDep int64
+	var toDep float64
 	switch len(cmd) {
 	case 1:
 		toDep = getBal(userID)
@@ -107,8 +102,10 @@ func depCommand(msg *dsc.MessageCreate, userID string, cmd []string) (success bo
 			sendErrf(msg.ChannelID, "Niepoprawna kwota! Podaj poprawną liczbe po poleceniu %sdep", cnf.CommandPrefix)
 			return
 		} else {
-			toDep = int64(x)
+			toDep = float64(x)
 		}
+	default:
+		sendErr(msg.ChannelID, "Nie poprawna liczba argumentów!")
 	}
 
 	if toDep < 0 {
@@ -133,7 +130,7 @@ func depCommand(msg *dsc.MessageCreate, userID string, cmd []string) (success bo
 }
 
 func withCommand(msg *dsc.MessageCreate, userID string, cmd []string) (success bool) {
-	var toWith int64
+	var toWith float64
 	switch len(cmd) {
 	case 1:
 		toWith = getBank(userID)
@@ -144,8 +141,10 @@ func withCommand(msg *dsc.MessageCreate, userID string, cmd []string) (success b
 			sendErrf(msg.ChannelID, "Niepoprawna kwota! Podaj poprawną liczbę po poleceniu %swith", cnf.CommandPrefix)
 			return
 		} else {
-			toWith = int64(x)
+			toWith = float64(x)
 		}
+	default:
+		sendErr(msg.ChannelID, "Nie poprawna liczba argumentów!")
 	}
 
 	if toWith < 0 {
